@@ -30,5 +30,7 @@ export const usePlanet = create<PlanetState>((set) => ({
   startWarp: (warpTarget) =>
     set({ warpTarget, warpPhase: "out", selectedId: null, planetOpen: false }),
   setWarpPhase: (warpPhase) => set({ warpPhase }),
-  endWarp: () => set({ warpTarget: null, warpPhase: "idle" }),
+  // Keep the last target mounted (hidden) so returning to orbit does not
+  // repeatedly tear down GPU-heavy surfaces and look like a page reset.
+  endWarp: () => set({ warpPhase: "idle" }),
 }));

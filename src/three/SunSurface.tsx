@@ -133,6 +133,7 @@ void main() {
 
 function Photosphere({ onSunClick }: { onSunClick: (e: ThreeEvent<MouseEvent>) => void }) {
   const mesh = useRef<THREE.Mesh>(null);
+  const matRef = useRef<THREE.ShaderMaterial | null>(null);
   const mat = useMemo(
     () =>
       new THREE.ShaderMaterial({
@@ -144,7 +145,7 @@ function Photosphere({ onSunClick }: { onSunClick: (e: ThreeEvent<MouseEvent>) =
   );
 
   useFrame((state, delta) => {
-    mat.uniforms.uTime.value = state.clock.elapsedTime;
+    if (matRef.current) matRef.current.uniforms.uTime.value = state.clock.elapsedTime;
     if (mesh.current) mesh.current.rotation.y += delta * 0.03;
   });
 
@@ -161,7 +162,7 @@ function Photosphere({ onSunClick }: { onSunClick: (e: ThreeEvent<MouseEvent>) =
       }}
     >
       <sphereGeometry args={[R, 96, 96]} />
-      <primitive object={mat} attach="material" />
+      <primitive ref={matRef} object={mat} attach="material" />
     </mesh>
   );
 }

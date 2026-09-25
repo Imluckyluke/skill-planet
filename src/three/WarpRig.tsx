@@ -12,6 +12,7 @@ import { usePlanet } from "@/store/usePlanet";
 const OVERVIEW = new THREE.Vector3(0, 2.6, 9.5);
 const ORIGIN = new THREE.Vector3(0, 0, 0);
 const fromPos = new THREE.Vector3();
+const homePos = new THREE.Vector3();
 const destPos = new THREE.Vector3();
 const lookPos = new THREE.Vector3();
 const turnFrom = new THREE.Quaternion();
@@ -90,6 +91,7 @@ export function WarpRig() {
       lastPhase.current = warpPhase;
       progress.current = 0;
       fromPos.copy(camera.position);
+      if (warpPhase === "out") homePos.copy(camera.position);
       // Flights + the turn own the camera; overview + warp views belong to OrbitControls.
       // (Forgetting to re-enable on arrival is what killed drag/zoom after Back.)
       if (controls) controls.enabled = warpPhase === "idle" || warpPhase === "in";
@@ -158,8 +160,9 @@ export function WarpRig() {
     } else if (warpPhase === "back") {
       progress.current = Math.min(1, progress.current + delta / 1.4);
       const t = easeInOutCubic(progress.current);
-      camera.position.lerpVectors(fromPos, OVERVIEW, t);
-      camera.lookAt(0, 0, 0);
+      const home = homePos.lengthSq() > 0.001 ? homePos : OVERVIEW;
+      camera.position.lerpVectors(fromPos, home, t);
+      camera.lookAt(ORIGIN);
       camera.fov = 55 - 10 * t;
       // Split view already eased out during the turn; stay centered.
       // The surface keeps dissolving out (see WarpTargets) as we leave it.

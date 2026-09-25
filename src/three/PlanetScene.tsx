@@ -27,8 +27,9 @@ export function PlanetScene() {
   // (including the warp-back flight, so nothing pops in mid-flight).
   const warpTarget = usePlanet((s) => s.warpTarget);
   const warpPhase = usePlanet((s) => s.warpPhase);
-  const warpedTo = (t: string) =>
-    warpTarget === t && warpPhase !== "idle";
+  const surfaceVisible =
+    warpPhase === "in" || warpPhase === "turn" || warpPhase === "back";
+  const warpedTo = (t: string) => warpTarget === t && surfaceVisible;
 
   const clearAll = () => {
     select(null);

@@ -25,7 +25,9 @@ export function FlareProjector() {
     const { camera, size } = state;
     const persp = camera as THREE.PerspectiveCamera;
     const { warpPhase, warpTarget } = usePlanet.getState();
-    const inSun = warpTarget === "sun" && warpPhase !== "idle";
+    const inSun =
+      warpTarget === "sun" &&
+      (warpPhase === "in" || warpPhase === "turn" || warpPhase === "back");
 
     v.set(SUN_POSITION[0], SUN_POSITION[1], SUN_POSITION[2]).project(camera);
 

@@ -18,12 +18,14 @@ import { BLACK_HOLE_POSITION } from "./BlackHole";
 export function WarpTargets() {
   const { warpPhase, warpTarget } = usePlanet();
 
-  if (warpPhase === "idle" || !warpTarget) return null;
+  if (!warpTarget) return null;
+  const visible =
+    warpPhase === "in" || warpPhase === "turn" || warpPhase === "back";
 
   switch (warpTarget) {
     case "sun":
       return (
-        <group position={SUN_POSITION}>
+        <group position={SUN_POSITION} visible={visible}>
           <Appear>
             <SunSurface isWarpView={true} />
           </Appear>
@@ -31,7 +33,7 @@ export function WarpTargets() {
       );
     case "galaxy":
       return (
-        <group position={GALAXY_POSITION}>
+        <group position={GALAXY_POSITION} visible={visible}>
           <Appear>
             <GalaxySurface />
           </Appear>
@@ -39,7 +41,7 @@ export function WarpTargets() {
       );
     case "blackhole":
       return (
-        <group position={BLACK_HOLE_POSITION}>
+        <group position={BLACK_HOLE_POSITION} visible={visible}>
           <Appear>
             <BlackHoleSurface />
           </Appear>
@@ -56,16 +58,23 @@ export function WarpTargets() {
 function Appear({ children }: { children: ReactNode }) {
   const ref = useRef<THREE.Group>(null);
   const t = useRef(0);
+  const lastPhase = useRef<string | null>(null);
 
   useFrame((_, rawDelta) => {
     const { warpPhase } = usePlanet.getState();
     const dt = Math.min(rawDelta, 0.05);
-    if (warpPhase === "back") {
-      if (t.current <= 0) return;
-      t.current = Math.max(0, t.current - dt / 1.0);
+    if (lastPhase.current !== warpPhase) {
+      lastPhase.current = warpPhase;
+      if (warpPhase === "out" || warpPhase === "idle") t.current = 0;
+    }
+    if (warpPhase === "out" || warpPhase === "idle") {
+      ref.current?.scale.setScalar(0.001);
+      return;
+    }
+    if (warpPhase === "in") {
+      t.current = Math.min(1, t.current + dt / 1.2);
     } else {
-      if (t.current >= 1) return;
-      t.current = Math.min(1, t.current + dt / 1.7);
+      t.current = Math.max(0, t.current - dt / 1.0);
     }
     const e = 1 - Math.pow(1 - t.current, 3);
     ref.current?.scale.setScalar(Math.max(0.001, e));

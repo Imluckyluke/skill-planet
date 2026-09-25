@@ -118,23 +118,28 @@ function StreamTubes() {
 const P_COUNT = 520;
 
 function InfallParticles() {
-  const { positions, colors } = useMemo(() => {
-    const positions = new Float32Array(P_COUNT * 3);
-    const colors = new Float32Array(P_COUNT * 3);
-    return { positions, colors };
-  }, []);
+  const dataRef = useRef<{
+    positions: Float32Array;
+    colors: Float32Array;
+    sVals: Float32Array;
+  } | null>(null);
 
-  const sVals = useMemo(() => {
+  if (dataRef.current === null) {
     const rand = mulberry31(7);
-    return Float32Array.from({ length: P_COUNT }, () => rand());
-  }, []);
+    dataRef.current = {
+      positions: new Float32Array(P_COUNT * 3),
+      colors: new Float32Array(P_COUNT * 3),
+      sVals: Float32Array.from({ length: P_COUNT }, () => rand()),
+    };
+  }
 
+  const data = dataRef.current;
   const geom = useMemo(() => {
     const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    g.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    g.setAttribute("position", new THREE.BufferAttribute(data.positions, 3));
+    g.setAttribute("color", new THREE.BufferAttribute(data.colors, 3));
     return g;
-  }, [positions, colors]);
+  }, [data]);
 
   const tmp = useMemo(() => new THREE.Vector3(), []);
   const outer = useMemo(() => new THREE.Color("#fff3d6"), []);
@@ -147,25 +152,22 @@ function InfallParticles() {
     const swirl = state.clock.elapsedTime * 0.12;
     for (let i = 0; i < P_COUNT; i++) {
       const arm = i % ARMS;
-      // Fall inward, accelerating as the hole's grip tightens
-      let s = sVals[i] - delta * (0.10 + (1 - sVals[i]) * 0.35);
+      let s = data.sVals[i] - delta * (0.10 + (1 - data.sVals[i]) * 0.35);
       if (s <= 0) s = 1;
-      sVals[i] = s;
+      data.sVals[i] = s;
       spiralPoint(arm, s, tmp);
-      // Whole pattern slowly wheels around
       const cs = Math.cos(swirl);
       const sn = Math.sin(swirl);
       const x = tmp.x * cs - tmp.y * sn;
       const y = tmp.x * sn + tmp.y * cs;
-      positions[i * 3] = x;
-      positions[i * 3 + 1] = y;
-      positions[i * 3 + 2] = tmp.z;
-      // White-hot far out, blood-red at the edge
+      data.positions[i * 3] = x;
+      data.positions[i * 3 + 1] = y;
+      data.positions[i * 3 + 2] = tmp.z;
       if (s > 0.5) cc.copy(mid).lerp(outer, (s - 0.5) * 2);
       else cc.copy(inner).lerp(mid, s * 2);
-      colors[i * 3] = cc.r;
-      colors[i * 3 + 1] = cc.g;
-      colors[i * 3 + 2] = cc.b;
+      data.colors[i * 3] = cc.r;
+      data.colors[i * 3 + 1] = cc.g;
+      data.colors[i * 3 + 2] = cc.b;
     }
     (geom.getAttribute("position") as THREE.BufferAttribute).needsUpdate = true;
     (geom.getAttribute("color") as THREE.BufferAttribute).needsUpdate = true;
