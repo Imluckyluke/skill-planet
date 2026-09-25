@@ -8,12 +8,12 @@ import { getGlowTexture, getSunTexture, getStreakTexture } from "./textures";
 export const SUN_SURFACE_POSITION: [number, number, number] = [-13, 10, -40];
 
 /** Immersive sun surface: granulated photosphere, prominences, corona. */
-export function SunSurface() {
+export function SunSurface({ isWarpView = false }: { isWarpView?: boolean }) {
   const startWarp = usePlanet((s) => s.startWarp);
 
   const onSunClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
-    startWarp("sun");
+    if (!isWarpView) startWarp("sun");
   };
 
   return (

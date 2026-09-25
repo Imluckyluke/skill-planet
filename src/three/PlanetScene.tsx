@@ -12,11 +12,15 @@ import { SKILL_CATEGORIES } from "@/data/skills";
 import { usePlanet } from "@/store/usePlanet";
 import { Galaxy, GALAXY_POSITION } from "./Galaxy";
 import { BlackHole, BLACK_HOLE_POSITION } from "./BlackHole";
-import { SunSurface } from "./SunSurface";
 import { FlareProjector } from "./FlareProjector";
 import { WarpRig } from "./WarpRig";
+import { WarpTargets } from "./WarpTargets";
+import { getStreakTexture, getSunTexture } from "./textures";
+import * as THREE from "three";
 
 export const SUN_POSITION: [number, number, number] = [-13, 10, -40];
+
+const { AdditiveBlending } = THREE;
 
 export function PlanetScene() {
   const select = usePlanet((s) => s.select);
@@ -53,6 +57,29 @@ export function PlanetScene() {
       {/* Cool planetary bounce so shadow sides stay readable */}
       <directionalLight position={[8, -4, 10]} intensity={0.5} color="#60a5fa" />
       <Suspense fallback={null}>
+        {/* Distant sun sprite (small, always visible) */}
+        <group position={SUN_POSITION}>
+          <sprite scale={[5.5, 5.5, 1]}>
+            <spriteMaterial
+              map={getSunTexture()}
+              transparent
+              opacity={0.98}
+              depthWrite={false}
+            />
+          </sprite>
+          <sprite scale={[18, 1.4, 1]}>
+            <spriteMaterial
+              map={getStreakTexture()}
+              color="#cfe0ff"
+              transparent
+              opacity={0.3}
+              blending={AdditiveBlending}
+              depthWrite={false}
+              depthTest
+            />
+          </sprite>
+        </group>
+
         <Stars
           radius={60}
           depth={30}
@@ -62,13 +89,16 @@ export function PlanetScene() {
           fade
           speed={0.6}
         />
-        <SunSurface />
         <Planet />
         {SKILL_CATEGORIES.map((c) => (
           <SkillIsland key={c.id} category={c} />
         ))}
         <Galaxy />
         <BlackHole />
+
+        {/* Detailed warp targets - only rendered when warped to that target */}
+        <WarpTargets />
+
         {/* Generous invisible click targets for warping - larger than visible meshes */}
         <mesh
           position={SUN_POSITION}
