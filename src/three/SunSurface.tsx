@@ -185,7 +185,7 @@ function mulberry(seed: number) {
 
 /** Ballistic plasma fountains: gas erupts along the surface normal and falls back. */
 function EruptionJets() {
-  const { positions, colors, vels, ages, lives, siteOf } = useMemo(() => {
+  const { positions, colors, vels, ages, lives, spawn } = useMemo(() => {
     const rand = mulberry(1234);
     const sites: THREE.Vector3[] = [];
     for (let i = 0; i < SITES; i++) {
@@ -199,10 +199,8 @@ function EruptionJets() {
     const vels = new Float32Array(COUNT * 3);
     const ages = new Float32Array(COUNT);
     const lives = new Float32Array(COUNT);
-    const siteOf = new Uint8Array(COUNT);
     const spawn = (i: number, stagger: boolean) => {
       const s = sites[i % SITES];
-      siteOf[i] = i % SITES;
       const jx = (rand() - 0.5) * 0.5;
       const jy = (rand() - 0.5) * 0.5;
       const jz = (rand() - 0.5) * 0.5;
@@ -221,7 +219,7 @@ function EruptionJets() {
       ages[i] = stagger ? rand() * lives[i] : 0;
     };
     for (let i = 0; i < COUNT; i++) spawn(i, true);
-    return { positions, colors, vels, ages, lives, siteOf, spawn, sites };
+    return { positions, colors, vels, ages, lives, spawn, sites };
   }, []);
 
   const geom = useMemo(() => {
