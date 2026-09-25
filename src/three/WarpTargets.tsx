@@ -1,5 +1,9 @@
 "use client";
 
+import { useRef } from "react";
+import type { ReactNode } from "react";
+import { useFrame } from "@react-three/fiber";
+import * as THREE from "three";
 import { usePlanet } from "@/store/usePlanet";
 import { SunSurface } from "./SunSurface";
 import { GalaxySurface } from "./GalaxySurface";
@@ -20,22 +24,48 @@ export function WarpTargets() {
     case "sun":
       return (
         <group position={SUN_POSITION}>
-          <SunSurface isWarpView={true} />
+          <Appear>
+            <SunSurface isWarpView={true} />
+          </Appear>
         </group>
       );
     case "galaxy":
       return (
         <group position={GALAXY_POSITION}>
-          <GalaxySurface />
+          <Appear>
+            <GalaxySurface />
+          </Appear>
         </group>
       );
     case "blackhole":
       return (
         <group position={BLACK_HOLE_POSITION}>
-          <BlackHoleSurface />
+          <Appear>
+            <BlackHoleSurface />
+          </Appear>
         </group>
       );
     default:
       return null;
   }
+}
+
+/** Grow-in animation: the surface materializes during the warp flight
+ *  (~1.7s, matching the flight) instead of popping into existence. */
+function Appear({ children }: { children: ReactNode }) {
+  const ref = useRef<THREE.Group>(null);
+  const t = useRef(0);
+
+  useFrame((_, rawDelta) => {
+    if (t.current >= 1) return;
+    t.current = Math.min(1, t.current + Math.min(rawDelta, 0.05) / 1.7);
+    const e = 1 - Math.pow(1 - t.current, 3);
+    ref.current?.scale.setScalar(Math.max(0.001, e));
+  });
+
+  return (
+    <group ref={ref} scale={0.001}>
+      {children}
+    </group>
+  );
 }

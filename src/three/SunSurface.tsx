@@ -169,9 +169,9 @@ function Photosphere({ onSunClick }: { onSunClick: (e: ThreeEvent<MouseEvent>) =
 /* -------------------------------- eruption jets ---------------------------------- */
 
 const SITES = 14;
-const PER_SITE = 45;
-const COUNT = SITES * PER_SITE;
-const GRAV = 3.4;
+const GRAV = 3.8;
+const DRAG = 0.35;
+const CURL = 1.1;
 
 function mulberry(seed: number) {
   return () => {
@@ -183,104 +183,178 @@ function mulberry(seed: number) {
   };
 }
 
-/** Ballistic plasma fountains: gas erupts along the surface normal and falls back. */
+/**
+ * Layered plasma fountains. Two point clouds share one ballistic simulation:
+ * big soft faint puffs (the glowing gas body) + small hot cores (bright filaments).
+ * Soft sprite texture, drag + curl so trajectories arc like real ejecta instead
+ * of straight firework lines, and staggered life cycles so nothing pulses in sync.
+ */
 function EruptionJets() {
-  const { positions, colors, vels, ages, lives, spawn } = useMemo(() => {
+  const sites = useMemo(() => {
     const rand = mulberry(1234);
-    const sites: THREE.Vector3[] = [];
+    const arr: THREE.Vector3[] = [];
     for (let i = 0; i < SITES; i++) {
       const u = rand() * 2 - 1;
       const a = rand() * Math.PI * 2;
       const s = Math.sqrt(1 - u * u);
-      sites.push(new THREE.Vector3(s * Math.cos(a), u, s * Math.sin(a)));
+      arr.push(new THREE.Vector3(s * Math.cos(a), u, s * Math.sin(a)));
     }
-    const positions = new Float32Array(COUNT * 3);
-    const colors = new Float32Array(COUNT * 3);
-    const vels = new Float32Array(COUNT * 3);
-    const ages = new Float32Array(COUNT);
-    const lives = new Float32Array(COUNT);
-    const spawn = (i: number, stagger: boolean) => {
-      const s = sites[i % SITES];
-      const jx = (rand() - 0.5) * 0.5;
-      const jy = (rand() - 0.5) * 0.5;
-      const jz = (rand() - 0.5) * 0.5;
-      const nx = s.x + jx * 0.3;
-      const ny = s.y + jy * 0.3;
-      const nz = s.z + jz * 0.3;
-      positions[i * 3] = nx * (R + 0.15);
-      positions[i * 3 + 1] = ny * (R + 0.15);
-      positions[i * 3 + 2] = nz * (R + 0.15);
-      // Erupt along the normal with a sideways kick
-      const speed = 2.6 + rand() * 3.8;
-      vels[i * 3] = nx * speed + (rand() - 0.5) * 2.2;
-      vels[i * 3 + 1] = ny * speed + (rand() - 0.5) * 2.2;
-      vels[i * 3 + 2] = nz * speed + (rand() - 0.5) * 2.2;
-      lives[i] = 1.4 + rand() * 1.8;
-      ages[i] = stagger ? rand() * lives[i] : 0;
-    };
-    for (let i = 0; i < COUNT; i++) spawn(i, true);
-    return { positions, colors, vels, ages, lives, spawn, sites };
+    return arr;
   }, []);
 
-  const geom = useMemo(() => {
-    const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    g.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-    return g;
-  }, [positions, colors]);
+  const body = useMemo(() => makeJetLayer(420, sites), [sites]);
+  const core = useMemo(() => makeJetLayer(220, sites), [sites]);
 
-  const tmp = useMemo(() => new THREE.Vector3(), []);
-  const fresh = useMemo(() => new THREE.Color("#ffe6bd"), []);
-  const spent = useMemo(() => new THREE.Color("#ff2d00"), []);
+  const bodyGeom = useMemo(() => layerGeometry(body), [body]);
+  const coreGeom = useMemo(() => layerGeometry(core), [core]);
+
+  const radial = useMemo(() => new THREE.Vector3(), []);
+  const tang = useMemo(() => new THREE.Vector3(), []);
+  const cBodyHot = useMemo(() => new THREE.Color("#ffd9a0"), []);
+  const cBodyCold = useMemo(() => new THREE.Color("#ff4400"), []);
+  const cCoreHot = useMemo(() => new THREE.Color("#fff6e0"), []);
+  const cCoreCold = useMemo(() => new THREE.Color("#ff5a00"), []);
   const cc = useMemo(() => new THREE.Color(), []);
+  const glow = useMemo(() => getGlowTexture(), []);
 
   useFrame((_, rawDelta) => {
     const delta = Math.min(rawDelta, 0.05);
-    for (let i = 0; i < COUNT; i++) {
-      ages[i] += delta;
-      const ix = i * 3;
-      if (ages[i] >= lives[i]) {
-        spawn(i, false);
-        continue;
-      }
-      // Gravity pulls back toward the sun's center
-      tmp.set(positions[ix], positions[ix + 1], positions[ix + 2]);
-      const dist = tmp.length();
-      if (dist < R - 0.25) {
-        spawn(i, false);
-        continue;
-      }
-      tmp.divideScalar(dist); // center direction
-      vels[ix] -= tmp.x * GRAV * delta;
-      vels[ix + 1] -= tmp.y * GRAV * delta;
-      vels[ix + 2] -= tmp.z * GRAV * delta;
-      positions[ix] += vels[ix] * delta;
-      positions[ix + 1] += vels[ix + 1] * delta;
-      positions[ix + 2] += vels[ix + 2] * delta;
-      // Fresh ejecta burns white-hot, cooling to deep red as it falls
-      const k = 1 - ages[i] / lives[i];
-      cc.copy(spent).lerp(fresh, k * k);
-      colors[ix] = cc.r;
-      colors[ix + 1] = cc.g;
-      colors[ix + 2] = cc.b;
-    }
-    (geom.getAttribute("position") as THREE.BufferAttribute).needsUpdate = true;
-    (geom.getAttribute("color") as THREE.BufferAttribute).needsUpdate = true;
+    stepJetLayer(body, bodyGeom, delta, radial, tang, cc, cBodyCold, cBodyHot, 1.5);
+    stepJetLayer(core, coreGeom, delta, radial, tang, cc, cCoreCold, cCoreHot, 2.0);
   });
 
   return (
-    <points geometry={geom} frustumCulled={false}>
-      <pointsMaterial
-        size={0.45}
-        sizeAttenuation
-        transparent
-        opacity={0.9}
-        depthWrite={false}
-        blending={THREE.AdditiveBlending}
-        vertexColors
-      />
-    </points>
+    <group>
+      <points geometry={bodyGeom} frustumCulled={false}>
+        <pointsMaterial
+          size={1.05}
+          map={glow}
+          sizeAttenuation
+          transparent
+          opacity={0.5}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+          vertexColors
+        />
+      </points>
+      <points geometry={coreGeom} frustumCulled={false}>
+        <pointsMaterial
+          size={0.34}
+          map={glow}
+          sizeAttenuation
+          transparent
+          opacity={0.95}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+          vertexColors
+        />
+      </points>
+    </group>
   );
+}
+
+interface JetLayer {
+  count: number;
+  positions: Float32Array;
+  colors: Float32Array;
+  vels: Float32Array;
+  ages: Float32Array;
+  lives: Float32Array;
+  spawn: (i: number, stagger: boolean) => void;
+}
+
+function makeJetLayer(count: number, sites: THREE.Vector3[]): JetLayer {
+  const rand = mulberry(count * 31 + 7);
+  const positions = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3);
+  const vels = new Float32Array(count * 3);
+  const ages = new Float32Array(count);
+  const lives = new Float32Array(count);
+  const spawn = (i: number, stagger: boolean) => {
+    const s = sites[i % sites.length];
+    const jx = (rand() - 0.5) * 0.6;
+    const jy = (rand() - 0.5) * 0.6;
+    const jz = (rand() - 0.5) * 0.6;
+    const nx = s.x + jx * 0.35;
+    const ny = s.y + jy * 0.35;
+    const nz = s.z + jz * 0.35;
+    positions[i * 3] = nx * (R + 0.15);
+    positions[i * 3 + 1] = ny * (R + 0.15);
+    positions[i * 3 + 2] = nz * (R + 0.15);
+    const speed = 2.2 + rand() * 3.2;
+    vels[i * 3] = nx * speed + (rand() - 0.5) * 2.4;
+    vels[i * 3 + 1] = ny * speed + (rand() - 0.5) * 2.4;
+    vels[i * 3 + 2] = nz * speed + (rand() - 0.5) * 2.4;
+    lives[i] = 1.2 + rand() * 2.0;
+    ages[i] = stagger ? rand() * lives[i] : 0;
+  };
+  for (let i = 0; i < count; i++) spawn(i, true);
+  return { count, positions, colors, vels, ages, lives, spawn };
+}
+
+function layerGeometry(layer: JetLayer) {
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.BufferAttribute(layer.positions, 3));
+  g.setAttribute("color", new THREE.BufferAttribute(layer.colors, 3));
+  return g;
+}
+
+function stepJetLayer(
+  layer: JetLayer,
+  geom: THREE.BufferGeometry,
+  delta: number,
+  radial: THREE.Vector3,
+  tang: THREE.Vector3,
+  cc: THREE.Color,
+  cold: THREE.Color,
+  hot: THREE.Color,
+  sharpness: number,
+) {
+  const { count, positions, colors, vels, ages, lives, spawn } = layer;
+  for (let i = 0; i < count; i++) {
+    ages[i] += delta;
+    const ix = i * 3;
+    if (ages[i] >= lives[i]) {
+      spawn(i, false);
+      continue;
+    }
+    radial.set(positions[ix], positions[ix + 1], positions[ix + 2]);
+    const dist = radial.length();
+    if (dist < R - 0.25) {
+      spawn(i, false);
+      continue;
+    }
+    radial.divideScalar(dist);
+    // Gravity back toward the center
+    vels[ix] -= radial.x * GRAV * delta;
+    vels[ix + 1] -= radial.y * GRAV * delta;
+    vels[ix + 2] -= radial.z * GRAV * delta;
+    // Curl: bend trajectories sideways so arcs curve like real ejecta
+    tang.set(-radial.z, 0, radial.x);
+    const tl = tang.length();
+    if (tl > 1e-4) {
+      const side = (i % 2 === 0 ? 1 : -1) * (0.4 + ((i * 13) % 10) / 16);
+      vels[ix] += (tang.x / tl) * side * CURL * delta * 2;
+      vels[ix + 1] += (tang.y / tl) * side * CURL * delta * 2;
+      vels[ix + 2] += (tang.z / tl) * side * CURL * delta * 2;
+    }
+    // Drag keeps the motion soft, not ballistic-hard
+    const dragK = 1 - DRAG * delta;
+    vels[ix] *= dragK;
+    vels[ix + 1] *= dragK;
+    vels[ix + 2] *= dragK;
+    positions[ix] += vels[ix] * delta;
+    positions[ix + 1] += vels[ix + 1] * delta;
+    positions[ix + 2] += vels[ix + 2] * delta;
+    // Fresh ejecta burns bright, cooling as it falls
+    const k = 1 - ages[i] / lives[i];
+    cc.copy(cold).lerp(hot, Math.pow(k, sharpness));
+    colors[ix] = cc.r;
+    colors[ix + 1] = cc.g;
+    colors[ix + 2] = cc.b;
+  }
+  (geom.getAttribute("position") as THREE.BufferAttribute).needsUpdate = true;
+  (geom.getAttribute("color") as THREE.BufferAttribute).needsUpdate = true;
 }
 
 /* ------------------------------- prominence loops -------------------------------- */

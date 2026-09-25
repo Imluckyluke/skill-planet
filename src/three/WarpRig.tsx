@@ -21,10 +21,11 @@ function easeInOutCubic(t: number) {
 function destinationFor(target: "sun" | "galaxy" | "blackhole") {
   if (target === "sun") {
     lookPos.set(SUN_POSITION[0], SUN_POSITION[1], SUN_POSITION[2]);
-    // Park just off the photosphere so the surface fills the left half.
+    // Park well off the photosphere: radius 7 + tall plasma jets need room,
+    // otherwise the surface swallows the whole frame and feels wrong.
     destPos
       .copy(lookPos)
-      .add(new THREE.Vector3(10, -6, 30).normalize().multiplyScalar(11));
+      .add(new THREE.Vector3(10, -6, 30).normalize().multiplyScalar(16.5));
   } else if (target === "galaxy") {
     lookPos.set(GALAXY_POSITION[0], GALAXY_POSITION[1], GALAXY_POSITION[2]);
     destPos
