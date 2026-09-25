@@ -69,7 +69,7 @@ export function PlanetScene() {
         ))}
         <Galaxy />
         <BlackHole />
-        {/* Generous invisible click targets for warping */}
+        {/* Generous invisible click targets for warping - larger than visible meshes */}
         <mesh
           position={SUN_POSITION}
           onClick={(e) => {
@@ -79,7 +79,7 @@ export function PlanetScene() {
           onPointerOver={hoverOn}
           onPointerOut={hoverOff}
         >
-          <sphereGeometry args={[7, 8, 8]} />
+          <sphereGeometry args={[9, 16, 16]} />
           <meshBasicMaterial transparent opacity={0} depthWrite={false} />
         </mesh>
         <mesh
@@ -91,7 +91,7 @@ export function PlanetScene() {
           onPointerOver={hoverOn}
           onPointerOut={hoverOff}
         >
-          <sphereGeometry args={[22, 8, 8]} />
+          <sphereGeometry args={[28, 16, 16]} />
           <meshBasicMaterial transparent opacity={0} depthWrite={false} />
         </mesh>
         <mesh
@@ -103,7 +103,7 @@ export function PlanetScene() {
           onPointerOver={hoverOn}
           onPointerOut={hoverOff}
         >
-          <sphereGeometry args={[9, 8, 8]} />
+          <sphereGeometry args={[12, 16, 16]} />
           <meshBasicMaterial transparent opacity={0} depthWrite={false} />
         </mesh>
         <CameraRig />

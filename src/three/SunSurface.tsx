@@ -1,16 +1,35 @@
 "use client";
 
 import * as THREE from "three";
+import { usePlanet } from "@/store/usePlanet";
+import { ThreeEvent } from "@react-three/fiber";
 import { getGlowTexture, getSunTexture, getStreakTexture } from "./textures";
 
 export const SUN_SURFACE_POSITION: [number, number, number] = [-13, 10, -40];
 
 /** Immersive sun surface: granulated photosphere, prominences, corona. */
 export function SunSurface() {
+  const startWarp = usePlanet((s) => s.startWarp);
+
+  const onSunClick = (e: ThreeEvent<MouseEvent>) => {
+    e.stopPropagation();
+    startWarp("sun");
+  };
+
   return (
     <group position={SUN_SURFACE_POSITION}>
       {/* Photosphere - granulated surface */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh
+        rotation={[-Math.PI / 2, 0, 0]}
+        onClick={onSunClick}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          document.body.style.cursor = "pointer";
+        }}
+        onPointerOut={() => {
+          document.body.style.cursor = "auto";
+        }}
+      >
         <sphereGeometry args={[7, 128, 128]} />
         <meshBasicMaterial
           map={getSunTexture()}
