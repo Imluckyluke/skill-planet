@@ -21,15 +21,37 @@ function easeInOutCubic(t: number) {
 function destinationFor(target: "sun" | "galaxy" | "blackhole") {
   if (target === "sun") {
     lookPos.set(SUN_POSITION[0], SUN_POSITION[1], SUN_POSITION[2]);
-    destPos.copy(lookPos).add(new THREE.Vector3(13, -10, 40).normalize().multiplyScalar(13));
+    // Park just off the photosphere so the surface fills the left half.
+    destPos
+      .copy(lookPos)
+      .add(new THREE.Vector3(10, -6, 30).normalize().multiplyScalar(11));
   } else if (target === "galaxy") {
     lookPos.set(GALAXY_POSITION[0], GALAXY_POSITION[1], GALAXY_POSITION[2]);
-    destPos.copy(lookPos).add(new THREE.Vector3(-35, 18, 70).normalize().multiplyScalar(20));
+    destPos
+      .copy(lookPos)
+      .add(new THREE.Vector3(-14, 10, 34).normalize().multiplyScalar(26));
   } else {
-    lookPos.set(BLACK_HOLE_POSITION[0], BLACK_HOLE_POSITION[1], BLACK_HOLE_POSITION[2]);
-    destPos.copy(lookPos).add(new THREE.Vector3(30, -12, 55).normalize().multiplyScalar(10));
+    lookPos.set(
+      BLACK_HOLE_POSITION[0],
+      BLACK_HOLE_POSITION[1],
+      BLACK_HOLE_POSITION[2],
+    );
+    destPos
+      .copy(lookPos)
+      .add(new THREE.Vector3(-16, -6, 30).normalize().multiplyScalar(13));
   }
   return { destPos, lookPos };
+}
+
+/** Shift the 3D view left on wide screens so the side menu owns the right half. */
+function applySplitView(camera: THREE.PerspectiveCamera, size: { width: number; height: number }) {
+  if (size.width > 640) {
+    // Show the right-shifted sub-frustum => object appears on the left half.
+    camera.setViewOffset(size.width, size.height, size.width * 0.22, 0, size.width, size.height);
+  } else {
+    camera.clearViewOffset();
+  }
+  camera.updateProjectionMatrix();
 }
 
 /** Drives the warp flights; OrbitControls take over on arrival. */
@@ -49,6 +71,10 @@ export function WarpRig() {
       progress.current = 0;
       fromPos.copy(camera.position);
       if (controls) controls.enabled = false;
+      if (warpPhase === "out" || warpPhase === "back") {
+        camera.clearViewOffset();
+        camera.updateProjectionMatrix();
+      }
     }
 
     if (warpPhase === "out" && warpTarget) {
@@ -64,10 +90,27 @@ export function WarpRig() {
         camera.updateProjectionMatrix();
         if (controls) {
           controls.target.copy(look);
+          // Warp parking distances (11–26) exceed the orbit defaults (4–16).
+          controls.minDistance = 4;
+          controls.maxDistance = 60;
           controls.enabled = true;
+          controls.update();
         }
+        applySplitView(camera, state.size);
         setWarpPhase("in");
       }
+    } else if (warpPhase === "in" && warpTarget) {
+      // Keep the lock every frame: damping/autoRotate would otherwise drift
+      // the target back toward the planet. Also re-apply split view on resize.
+      const { lookPos: look } = destinationFor(warpTarget);
+      if (controls) {
+        controls.target.lerp(look, 1 - Math.exp(-6 * delta));
+        controls.enabled = true;
+        controls.update();
+      } else {
+        camera.lookAt(look);
+      }
+      applySplitView(camera, state.size);
     } else if (warpPhase === "back") {
       progress.current = Math.min(1, progress.current + delta / 1.4);
       const t = easeInOutCubic(progress.current);
@@ -77,10 +120,14 @@ export function WarpRig() {
       camera.updateProjectionMatrix();
       if (progress.current >= 1) {
         camera.fov = 45;
+        camera.clearViewOffset();
         camera.updateProjectionMatrix();
         if (controls) {
           controls.target.set(0, 0, 0);
+          controls.minDistance = 4;
+          controls.maxDistance = 16;
           controls.enabled = true;
+          controls.update();
         }
         endWarp();
       }
