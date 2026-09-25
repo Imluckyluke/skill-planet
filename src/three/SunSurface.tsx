@@ -246,7 +246,7 @@ function EruptionJets() {
         continue;
       }
       // Gravity pulls back toward the sun's center
-      tmp.set(positions[ix], positions[ix + 1], positions[ix + 2]]);
+      tmp.set(positions[ix], positions[ix + 1], positions[ix + 2]);
       const dist = tmp.length();
       if (dist < R - 0.25) {
         spawn(i, false);
