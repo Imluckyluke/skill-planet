@@ -42,7 +42,7 @@ export function WarpCard() {
               <p className="mt-2 text-sm leading-6 text-white/70">{info.tagline}</p>
             </div>
             <button
-              onClick={() => setWarpPhase("back")}
+              onClick={() => setWarpPhase("turn")}
               className="shrink-0 rounded-full border border-white/15 px-3 py-1 text-xs text-white/70 transition-colors hover:bg-white/10 hover:text-white"
             >
               ← Back
@@ -68,16 +68,20 @@ export function WarpCard() {
   );
 }
 
-/** Tiny status pill shown during the warp flights (out + back). */
+/** Tiny status pill shown during the warp flights (out + turn + back). */
 export function WarpStatus() {
   const warpPhase = usePlanet((s) => s.warpPhase);
 
-  if (warpPhase !== "out" && warpPhase !== "back") return null;
+  if (warpPhase !== "out" && warpPhase !== "turn" && warpPhase !== "back") return null;
 
   return (
     <div className="pointer-events-none absolute inset-x-0 top-4 z-20 flex justify-center sm:top-6">
       <div className="animate-pulse rounded-full border border-amber-200/30 bg-black/60 px-4 py-1.5 text-xs tracking-widest text-amber-100/90 backdrop-blur">
-        {warpPhase === "out" ? "WARPING ⟶" : "⟵ RETURNING TO ORBIT"}
+        {warpPhase === "out"
+          ? "WARPING ⟶"
+          : warpPhase === "turn"
+            ? "TURNING HOME…"
+            : "⟵ RETURNING TO ORBIT"}
       </div>
     </div>
   );

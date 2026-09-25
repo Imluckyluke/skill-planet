@@ -10,9 +10,13 @@ import { BLACK_HOLE_POSITION } from "./BlackHole";
 import { usePlanet } from "@/store/usePlanet";
 
 const OVERVIEW = new THREE.Vector3(0, 2.6, 9.5);
+const ORIGIN = new THREE.Vector3(0, 0, 0);
 const fromPos = new THREE.Vector3();
 const destPos = new THREE.Vector3();
 const lookPos = new THREE.Vector3();
+const turnFrom = new THREE.Quaternion();
+const turnTo = new THREE.Quaternion();
+const lookMat = new THREE.Matrix4();
 
 function easeInOutCubic(t: number) {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
@@ -86,9 +90,15 @@ export function WarpRig() {
       lastPhase.current = warpPhase;
       progress.current = 0;
       fromPos.copy(camera.position);
-      // Flights own the camera; overview + warp views belong to OrbitControls.
+      // Flights + the turn own the camera; overview + warp views belong to OrbitControls.
       // (Forgetting to re-enable on arrival is what killed drag/zoom after Back.)
-      if (controls) controls.enabled = warpPhase !== "out" && warpPhase !== "back";
+      if (controls) controls.enabled = warpPhase === "idle" || warpPhase === "in";
+      if (warpPhase === "turn") {
+        // Capture the turn: from wherever we're looking now to facing home.
+        turnFrom.copy(camera.quaternion);
+        lookMat.lookAt(camera.position, ORIGIN, camera.up);
+        turnTo.setFromRotationMatrix(lookMat);
+      }
       // NOTE: no instant clearViewOffset here — the split factor animates
       // continuously (0 at flight starts, easing in/out), so no jump cut.
     }
@@ -135,16 +145,25 @@ export function WarpRig() {
         camera.lookAt(look);
       }
       applySplitView(camera, state.size, 1);
+    } else if (warpPhase === "turn" && warpTarget) {
+      // Stage 1 of the return: rotate in place from the surface view toward
+      // home. The old code flipped lookAt(0,0,0) instantly — a ~180° snap
+      // that felt like a reload. The menu is already closed; the split view
+      // eases out while we turn.
+      progress.current = Math.min(1, progress.current + delta / 1.0);
+      const t = easeInOutCubic(progress.current);
+      camera.quaternion.slerpQuaternions(turnFrom, turnTo, t);
+      applySplitView(camera, state.size, 1 - t);
+      if (progress.current >= 1) setWarpPhase("back");
     } else if (warpPhase === "back") {
       progress.current = Math.min(1, progress.current + delta / 1.4);
       const t = easeInOutCubic(progress.current);
       camera.position.lerpVectors(fromPos, OVERVIEW, t);
       camera.lookAt(0, 0, 0);
       camera.fov = 55 - 10 * t;
-      // Ease the split view back out while flying home — a real warp-back,
-      // not a cut. The surface stays mounted (see WarpTargets) so you fly
-      // away from it instead of it popping out of existence.
-      applySplitView(camera, state.size, 1 - t);
+      // Split view already eased out during the turn; stay centered.
+      // The surface keeps dissolving out (see WarpTargets) as we leave it.
+      applySplitView(camera, state.size, 0);
       camera.updateProjectionMatrix();
       if (progress.current >= 1) {
         camera.fov = 45;

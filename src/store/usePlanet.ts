@@ -7,7 +7,9 @@ interface PlanetState {
   hoveredId: string | null;
   planetOpen: boolean;
   warpTarget: "sun" | "galaxy" | "blackhole" | null;
-  warpPhase: "idle" | "out" | "in" | "back";
+  // out = flying there, in = warp view, turn = rotating toward home,
+  // back = flying home, idle = main orbit.
+  warpPhase: "idle" | "out" | "in" | "turn" | "back";
   select: (id: string | null) => void;
   hover: (id: string | null) => void;
   setPlanetOpen: (v: boolean) => void;

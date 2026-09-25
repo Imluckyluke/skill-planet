@@ -18,9 +18,11 @@ export default function Home() {
     const onKey = (e: KeyboardEvent) => {
       const { warpPhase, setWarpPhase } = usePlanet.getState();
       if (warpPhase === "in" || warpPhase === "out") {
-        if (e.key === "Escape") setWarpPhase("back");
+        if (e.key === "Escape") setWarpPhase("turn");
         return;
       }
+      // Ignore keys mid-return so nothing fights the flight home.
+      if (warpPhase === "turn" || warpPhase === "back") return;
       if (e.key === "Escape" || e.key === "0") {
         select(null);
         setPlanetOpen(e.key === "0");
