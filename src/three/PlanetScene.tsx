@@ -4,16 +4,15 @@ import { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Stars } from "@react-three/drei";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
-import * as THREE from "three";
 import { Planet } from "./Planet";
 import { SkillIsland } from "./SkillIsland";
 import { CameraRig } from "./CameraRig";
 import { LabelProjector } from "./LabelProjector";
 import { SKILL_CATEGORIES } from "@/data/skills";
 import { usePlanet } from "@/store/usePlanet";
-import { getStreakTexture, getSunTexture } from "./textures";
 import { Galaxy, GALAXY_POSITION } from "./Galaxy";
 import { BlackHole, BLACK_HOLE_POSITION } from "./BlackHole";
+import { SunSurface } from "./SunSurface";
 import { FlareProjector } from "./FlareProjector";
 import { WarpRig } from "./WarpRig";
 
@@ -54,28 +53,6 @@ export function PlanetScene() {
       {/* Cool planetary bounce so shadow sides stay readable */}
       <directionalLight position={[8, -4, 10]} intensity={0.5} color="#60a5fa" />
       <Suspense fallback={null}>
-        {/* Distant sun: hot core + anamorphic lens streaks */}
-        <group position={SUN_POSITION}>
-          <sprite scale={[5.5, 5.5, 1]}>
-            <spriteMaterial
-              map={getSunTexture()}
-              transparent
-              opacity={0.98}
-              depthWrite={false}
-            />
-          </sprite>
-          <sprite scale={[18, 1.4, 1]}>
-            <spriteMaterial
-              map={getStreakTexture()}
-              color="#cfe0ff"
-              transparent
-              opacity={0.3}
-              blending={THREE.AdditiveBlending}
-              depthWrite={false}
-              depthTest
-            />
-          </sprite>
-        </group>
         <Stars
           radius={60}
           depth={30}
@@ -85,6 +62,7 @@ export function PlanetScene() {
           fade
           speed={0.6}
         />
+        <SunSurface />
         <Planet />
         {SKILL_CATEGORIES.map((c) => (
           <SkillIsland key={c.id} category={c} />

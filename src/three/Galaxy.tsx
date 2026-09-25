@@ -22,7 +22,7 @@ function mulberry(seed: number) {
 }
 
 /** Procedural spiral galaxy: warm core fading to cool rim, additive points. */
-export const GALAXY_POSITION: [number, number, number] = [95, -45, -175];
+export const GALAXY_POSITION: [number, number, number] = [35, -18, -70];
 
 export function Galaxy() {
   const spin = useRef<THREE.Points>(null);

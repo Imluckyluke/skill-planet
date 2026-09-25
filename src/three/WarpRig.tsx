@@ -24,10 +24,10 @@ function destinationFor(target: "sun" | "galaxy" | "blackhole") {
     destPos.copy(lookPos).add(new THREE.Vector3(13, -10, 40).normalize().multiplyScalar(13));
   } else if (target === "galaxy") {
     lookPos.set(GALAXY_POSITION[0], GALAXY_POSITION[1], GALAXY_POSITION[2]);
-    destPos.copy(lookPos).add(new THREE.Vector3(-46, 21, 72).normalize().multiplyScalar(38));
+    destPos.copy(lookPos).add(new THREE.Vector3(-35, 18, 70).normalize().multiplyScalar(20));
   } else {
     lookPos.set(BLACK_HOLE_POSITION[0], BLACK_HOLE_POSITION[1], BLACK_HOLE_POSITION[2]);
-    destPos.copy(lookPos).add(new THREE.Vector3(75, -28, 135).normalize().multiplyScalar(15));
+    destPos.copy(lookPos).add(new THREE.Vector3(30, -12, 55).normalize().multiplyScalar(10));
   }
   return { destPos, lookPos };
 }
