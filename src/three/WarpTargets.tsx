@@ -8,11 +8,13 @@ import { SUN_POSITION } from "./PlanetScene";
 import { GALAXY_POSITION } from "./Galaxy";
 import { BLACK_HOLE_POSITION } from "./BlackHole";
 
-/** Immersive surfaces, rendered AT the distant object (entering its atmosphere). */
+/** Immersive surfaces, rendered AT the distant object (entering its atmosphere).
+ *  Kept mounted during "back" too, so the Back button flies you away from
+ *  the surface instead of it vanishing with a jump cut. */
 export function WarpTargets() {
   const { warpPhase, warpTarget } = usePlanet();
 
-  if ((warpPhase !== "in" && warpPhase !== "out") || !warpTarget) return null;
+  if (warpPhase === "idle" || !warpTarget) return null;
 
   switch (warpTarget) {
     case "sun":

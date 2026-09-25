@@ -43,11 +43,16 @@ function destinationFor(target: "sun" | "galaxy" | "blackhole") {
   return { destPos, lookPos };
 }
 
-/** Shift the 3D view left on wide screens so the side menu owns the right half. */
-function applySplitView(camera: THREE.PerspectiveCamera, size: { width: number; height: number }) {
-  if (size.width > 640) {
-    // Show the right-shifted sub-frustum => object appears on the left half.
-    camera.setViewOffset(size.width, size.height, size.width * 0.22, 0, size.width, size.height);
+/** Shift the 3D view left on wide screens so the side menu owns the right half.
+ *  factor 0 = centered, 1 = full split. Animated so entering/exiting the
+ *  warp view never jump-cuts (that hard cut is what felt like a page reload). */
+function applySplitView(
+  camera: THREE.PerspectiveCamera,
+  size: { width: number; height: number },
+  factor: number,
+) {
+  if (size.width > 640 && factor > 0.001) {
+    camera.setViewOffset(size.width, size.height, size.width * 0.22 * factor, 0, size.width, size.height);
   } else {
     camera.clearViewOffset();
   }
@@ -71,10 +76,8 @@ export function WarpRig() {
       progress.current = 0;
       fromPos.copy(camera.position);
       if (controls) controls.enabled = false;
-      if (warpPhase === "out" || warpPhase === "back") {
-        camera.clearViewOffset();
-        camera.updateProjectionMatrix();
-      }
+      // NOTE: no instant clearViewOffset here — the split factor animates
+      // continuously (0 at flight starts, easing in/out), so no jump cut.
     }
 
     if (warpPhase === "out" && warpTarget) {
@@ -84,6 +87,8 @@ export function WarpRig() {
       camera.position.lerpVectors(fromPos, dest, t);
       camera.lookAt(look);
       camera.fov = 45 + Math.sin(Math.PI * Math.min(1, progress.current * 1.15)) * 50;
+      // Ease the split view in over the last stretch of the flight.
+      applySplitView(camera, state.size, THREE.MathUtils.smoothstep(progress.current, 0.65, 1));
       camera.updateProjectionMatrix();
       if (progress.current >= 1) {
         camera.fov = 55;
@@ -96,7 +101,7 @@ export function WarpRig() {
           controls.enabled = true;
           controls.update();
         }
-        applySplitView(camera, state.size);
+        applySplitView(camera, state.size, 1);
         setWarpPhase("in");
       }
     } else if (warpPhase === "in" && warpTarget) {
@@ -110,13 +115,17 @@ export function WarpRig() {
       } else {
         camera.lookAt(look);
       }
-      applySplitView(camera, state.size);
+      applySplitView(camera, state.size, 1);
     } else if (warpPhase === "back") {
       progress.current = Math.min(1, progress.current + delta / 1.4);
       const t = easeInOutCubic(progress.current);
       camera.position.lerpVectors(fromPos, OVERVIEW, t);
       camera.lookAt(0, 0, 0);
       camera.fov = 55 - 10 * t;
+      // Ease the split view back out while flying home — a real warp-back,
+      // not a cut. The surface stays mounted (see WarpTargets) so you fly
+      // away from it instead of it popping out of existence.
+      applySplitView(camera, state.size, 1 - t);
       camera.updateProjectionMatrix();
       if (progress.current >= 1) {
         camera.fov = 45;

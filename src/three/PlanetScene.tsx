@@ -23,11 +23,12 @@ export function PlanetScene() {
   const select = usePlanet((s) => s.select);
   const setPlanetOpen = usePlanet((s) => s.setPlanetOpen);
   const startWarp = usePlanet((s) => s.startWarp);
-  // Hide the distant billboard while its immersive surface is shown.
+  // Hide the distant billboard while its immersive surface is shown
+  // (including the warp-back flight, so nothing pops in mid-flight).
   const warpTarget = usePlanet((s) => s.warpTarget);
   const warpPhase = usePlanet((s) => s.warpPhase);
   const warpedTo = (t: string) =>
-    warpTarget === t && (warpPhase === "in" || warpPhase === "out");
+    warpTarget === t && warpPhase !== "idle";
 
   const clearAll = () => {
     select(null);
