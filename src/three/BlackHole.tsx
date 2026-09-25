@@ -2,7 +2,7 @@
 
 import { getGlowTexture } from "./textures";
 
-export const BLACK_HOLE_POSITION: [number, number, number] = [30, 14, -48];
+export const BLACK_HOLE_POSITION: [number, number, number] = [-16, -6, -57];
 
 /** Distant black hole: event-horizon shadow, photon glow, accretion disk. */
 export function BlackHole() {

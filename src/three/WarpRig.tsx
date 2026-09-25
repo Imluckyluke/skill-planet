@@ -75,9 +75,17 @@ export function WarpRig() {
       lastPhase.current = warpPhase;
       progress.current = 0;
       fromPos.copy(camera.position);
-      if (controls) controls.enabled = false;
+      // Flights own the camera; overview + warp views belong to OrbitControls.
+      // (Forgetting to re-enable on arrival is what killed drag/zoom after Back.)
+      if (controls) controls.enabled = warpPhase !== "out" && warpPhase !== "back";
       // NOTE: no instant clearViewOffset here — the split factor animates
       // continuously (0 at flight starts, easing in/out), so no jump cut.
+    }
+
+    if (warpPhase === "idle") {
+      // Safety net: controls must never stay disabled in overview.
+      if (controls && !controls.enabled) controls.enabled = true;
+      return;
     }
 
     if (warpPhase === "out" && warpTarget) {
