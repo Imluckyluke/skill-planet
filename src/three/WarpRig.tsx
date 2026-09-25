@@ -37,23 +37,33 @@ function destinationFor(target: "sun" | "galaxy" | "blackhole") {
       BLACK_HOLE_POSITION[1],
       BLACK_HOLE_POSITION[2],
     );
+    // Approach from the scene side so the flight sweeps through the main
+    // orbit instead of backing straight out.
     destPos
       .copy(lookPos)
-      .add(new THREE.Vector3(-16, -6, 30).normalize().multiplyScalar(13));
+      .add(new THREE.Vector3(-12, -4, -30).normalize().multiplyScalar(13));
   }
   return { destPos, lookPos };
 }
 
+const splitCache = { f: -1, w: 0, h: 0 };
+
 /** Shift the 3D view left on wide screens so the side menu owns the right half.
  *  factor 0 = centered, 1 = full split. Animated so entering/exiting the
- *  warp view never jump-cuts (that hard cut is what felt like a page reload). */
+ *  warp view never jump-cuts (that hard cut is what felt like a page reload).
+ *  Skips redundant projection updates (perf: updateProjectionMatrix is not free). */
 function applySplitView(
   camera: THREE.PerspectiveCamera,
   size: { width: number; height: number },
   factor: number,
 ) {
-  if (size.width > 640 && factor > 0.001) {
-    camera.setViewOffset(size.width, size.height, size.width * 0.22 * factor, 0, size.width, size.height);
+  const f = size.width > 640 ? factor : 0;
+  if (f === splitCache.f && size.width === splitCache.w && size.height === splitCache.h) return;
+  splitCache.f = f;
+  splitCache.w = size.width;
+  splitCache.h = size.height;
+  if (f > 0.001) {
+    camera.setViewOffset(size.width, size.height, size.width * 0.22 * f, 0, size.width, size.height);
   } else {
     camera.clearViewOffset();
   }

@@ -7,7 +7,7 @@ import { IslandLabels } from "@/ui/IslandLabels";
 import { SunFlare } from "@/ui/SunFlare";
 import { SkillCard } from "@/ui/SkillCard";
 import { PlanetCard } from "@/ui/PlanetCard";
-import { WarpCard } from "@/ui/WarpCard";
+import { WarpCard, WarpStatus } from "@/ui/WarpCard";
 import { SKILL_CATEGORIES } from "@/data/skills";
 import { usePlanet } from "@/store/usePlanet";
 
@@ -48,6 +48,7 @@ export default function Home() {
       <SkillCard />
       <PlanetCard />
       <WarpCard />
+      <WarpStatus />
     </main>
   );
 }

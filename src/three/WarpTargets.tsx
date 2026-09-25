@@ -50,15 +50,23 @@ export function WarpTargets() {
   }
 }
 
-/** Grow-in animation: the surface materializes during the warp flight
- *  (~1.7s, matching the flight) instead of popping into existence. */
+/** Grow/shrink animation: the surface materializes during the warp flight
+ *  (~1.7s, matching the flight) instead of popping into existence — and
+ *  dissolves back out during the return flight so arrival never pops either. */
 function Appear({ children }: { children: ReactNode }) {
   const ref = useRef<THREE.Group>(null);
   const t = useRef(0);
 
   useFrame((_, rawDelta) => {
-    if (t.current >= 1) return;
-    t.current = Math.min(1, t.current + Math.min(rawDelta, 0.05) / 1.7);
+    const { warpPhase } = usePlanet.getState();
+    const dt = Math.min(rawDelta, 0.05);
+    if (warpPhase === "back") {
+      if (t.current <= 0) return;
+      t.current = Math.max(0, t.current - dt / 1.0);
+    } else {
+      if (t.current >= 1) return;
+      t.current = Math.min(1, t.current + dt / 1.7);
+    }
     const e = 1 - Math.pow(1 - t.current, 3);
     ref.current?.scale.setScalar(Math.max(0.001, e));
   });

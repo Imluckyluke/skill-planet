@@ -67,3 +67,18 @@ export function WarpCard() {
     </div>
   );
 }
+
+/** Tiny status pill shown during the warp flights (out + back). */
+export function WarpStatus() {
+  const warpPhase = usePlanet((s) => s.warpPhase);
+
+  if (warpPhase !== "out" && warpPhase !== "back") return null;
+
+  return (
+    <div className="pointer-events-none absolute inset-x-0 top-4 z-20 flex justify-center sm:top-6">
+      <div className="animate-pulse rounded-full border border-amber-200/30 bg-black/60 px-4 py-1.5 text-xs tracking-widest text-amber-100/90 backdrop-blur">
+        {warpPhase === "out" ? "WARPING ⟶" : "⟵ RETURNING TO ORBIT"}
+      </div>
+    </div>
+  );
+}
