@@ -15,17 +15,19 @@ import { BlackHole, BLACK_HOLE_POSITION } from "./BlackHole";
 import { FlareProjector } from "./FlareProjector";
 import { WarpRig } from "./WarpRig";
 import { WarpTargets } from "./WarpTargets";
-import { getStreakTexture, getSunTexture } from "./textures";
-import * as THREE from "three";
+import { getSunTexture } from "./textures";
 
-export const SUN_POSITION: [number, number, number] = [-13, 10, -40];
-
-const { AdditiveBlending } = THREE;
+export const SUN_POSITION: [number, number, number] = [-34, 12, -42];
 
 export function PlanetScene() {
   const select = usePlanet((s) => s.select);
   const setPlanetOpen = usePlanet((s) => s.setPlanetOpen);
   const startWarp = usePlanet((s) => s.startWarp);
+  // Hide the distant billboard while its immersive surface is shown.
+  const warpTarget = usePlanet((s) => s.warpTarget);
+  const warpPhase = usePlanet((s) => s.warpPhase);
+  const warpedTo = (t: string) =>
+    warpTarget === t && (warpPhase === "in" || warpPhase === "out");
 
   const clearAll = () => {
     select(null);
@@ -57,28 +59,23 @@ export function PlanetScene() {
       {/* Cool planetary bounce so shadow sides stay readable */}
       <directionalLight position={[8, -4, 10]} intensity={0.5} color="#60a5fa" />
       <Suspense fallback={null}>
-        {/* Distant sun sprite (small, always visible) */}
-        <group position={SUN_POSITION}>
-          <sprite scale={[5.5, 5.5, 1]}>
-            <spriteMaterial
-              map={getSunTexture()}
-              transparent
-              opacity={0.98}
-              depthWrite={false}
-            />
-          </sprite>
-          <sprite scale={[18, 1.4, 1]}>
-            <spriteMaterial
-              map={getStreakTexture()}
-              color="#cfe0ff"
-              transparent
-              opacity={0.3}
-              blending={AdditiveBlending}
-              depthWrite={false}
-              depthTest
-            />
-          </sprite>
-        </group>
+        {/* Distant sun sprite (small, always visible unless warped to it).
+            NOTE: the old world-space anamorphic streak sprite was removed here:
+            as a 3D sprite it stayed fixed across the main orbit and cut through
+            the planet. The streak now lives in screen space (SunFlare) and
+            follows the sun's projection, so it moves/rotates with the camera. */}
+        {!warpedTo("sun") && (
+          <group position={SUN_POSITION}>
+            <sprite scale={[5.5, 5.5, 1]}>
+              <spriteMaterial
+                map={getSunTexture()}
+                transparent
+                opacity={0.98}
+                depthWrite={false}
+              />
+            </sprite>
+          </group>
+        )}
 
         <Stars
           radius={60}
@@ -93,13 +90,14 @@ export function PlanetScene() {
         {SKILL_CATEGORIES.map((c) => (
           <SkillIsland key={c.id} category={c} />
         ))}
-        <Galaxy />
-        <BlackHole />
+        {!warpedTo("galaxy") && <Galaxy />}
+        {!warpedTo("blackhole") && <BlackHole />}
 
         {/* Detailed warp targets - only rendered when warped to that target */}
         <WarpTargets />
 
-        {/* Generous invisible click targets for warping - larger than visible meshes */}
+        {/* Invisible click targets — sized to NOT overlap each other
+            (old radii 9/28/12 overlapped since sun & BH were ~22 units apart). */}
         <mesh
           position={SUN_POSITION}
           onClick={(e) => {
@@ -109,7 +107,7 @@ export function PlanetScene() {
           onPointerOver={hoverOn}
           onPointerOut={hoverOff}
         >
-          <sphereGeometry args={[9, 16, 16]} />
+          <sphereGeometry args={[6, 16, 16]} />
           <meshBasicMaterial transparent opacity={0} depthWrite={false} />
         </mesh>
         <mesh
@@ -121,7 +119,7 @@ export function PlanetScene() {
           onPointerOver={hoverOn}
           onPointerOut={hoverOff}
         >
-          <sphereGeometry args={[28, 16, 16]} />
+          <sphereGeometry args={[20, 16, 16]} />
           <meshBasicMaterial transparent opacity={0} depthWrite={false} />
         </mesh>
         <mesh
@@ -133,7 +131,7 @@ export function PlanetScene() {
           onPointerOver={hoverOn}
           onPointerOut={hoverOff}
         >
-          <sphereGeometry args={[12, 16, 16]} />
+          <sphereGeometry args={[7, 16, 16]} />
           <meshBasicMaterial transparent opacity={0} depthWrite={false} />
         </mesh>
         <CameraRig />

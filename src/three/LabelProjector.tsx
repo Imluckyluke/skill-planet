@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { SKILL_CATEGORIES } from "@/data/skills";
 import { anchorRegistry, pillRegistry } from "./labelRegistry";
+import { usePlanet } from "@/store/usePlanet";
 
 const v = new THREE.Vector3();
 const toIsland = new THREE.Vector3();
@@ -17,6 +18,9 @@ const PLANET_RADIUS = 1.85;
 export function LabelProjector() {
   useFrame((state) => {
     const { camera, size } = state;
+    // Hide island pills while warped — they'd float over the surface view.
+    const { warpPhase } = usePlanet.getState();
+    const warped = warpPhase !== "idle";
     toPlanet.set(0, 0, 0).sub(camera.position);
     const distPlanet = toPlanet.length();
     const planetAngular = Math.asin(Math.min(1, PLANET_RADIUS / distPlanet));
@@ -44,7 +48,7 @@ export function LabelProjector() {
       const x = (v.x * 0.5 + 0.5) * size.width;
       const y = (-v.y * 0.5 + 0.5) * size.height;
       pill.style.transform = `translate(-50%,-50%) translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`;
-      pill.style.opacity = behindCamera || occluded ? "0" : "1";
+      pill.style.opacity = warped || behindCamera || occluded ? "0" : "1";
     }
   });
 

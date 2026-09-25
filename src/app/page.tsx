@@ -7,6 +7,7 @@ import { IslandLabels } from "@/ui/IslandLabels";
 import { SunFlare } from "@/ui/SunFlare";
 import { SkillCard } from "@/ui/SkillCard";
 import { PlanetCard } from "@/ui/PlanetCard";
+import { WarpCard } from "@/ui/WarpCard";
 import { SKILL_CATEGORIES } from "@/data/skills";
 import { usePlanet } from "@/store/usePlanet";
 
@@ -15,6 +16,11 @@ export default function Home() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      const { warpPhase, setWarpPhase } = usePlanet.getState();
+      if (warpPhase === "in" || warpPhase === "out") {
+        if (e.key === "Escape") setWarpPhase("back");
+        return;
+      }
       if (e.key === "Escape" || e.key === "0") {
         select(null);
         setPlanetOpen(e.key === "0");
@@ -41,6 +47,7 @@ export default function Home() {
       <HUD />
       <SkillCard />
       <PlanetCard />
+      <WarpCard />
     </main>
   );
 }

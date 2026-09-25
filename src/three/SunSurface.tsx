@@ -5,9 +5,10 @@ import { usePlanet } from "@/store/usePlanet";
 import { ThreeEvent } from "@react-three/fiber";
 import { getGlowTexture, getSunTexture, getStreakTexture } from "./textures";
 
-export const SUN_SURFACE_POSITION: [number, number, number] = [-13, 10, -40];
+export const SUN_SURFACE_POSITION: [number, number, number] = [0, 0, 0];
 
-/** Immersive sun surface: granulated photosphere, prominences, corona. */
+/** Immersive sun surface: granulated photosphere, prominences, corona.
+ *  Rendered at local origin — WarpTargets places it at SUN_POSITION. */
 export function SunSurface({ isWarpView = false }: { isWarpView?: boolean }) {
   const startWarp = usePlanet((s) => s.startWarp);
 

@@ -14,10 +14,17 @@ const lookTarget = new THREE.Vector3();
 export function CameraRig() {
   const controls = useRef<OrbitControlsImpl | null>(null);
   const selectedId = usePlanet((s) => s.selectedId);
+  const warpPhase = usePlanet((s) => s.warpPhase);
 
   useFrame((state, delta) => {
     const c = controls.current;
     if (!c) return;
+    // WarpRig owns the camera during flights + warp views. Don't fight it:
+    // touching target/update here is what snapped the view back to the planet.
+    if (warpPhase !== "idle") {
+      c.autoRotate = false;
+      return;
+    }
     c.autoRotate = selectedId === null;
 
     const active = SKILL_CATEGORIES.find((k) => k.id === selectedId);
