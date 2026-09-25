@@ -46,7 +46,7 @@ function destinationFor(target: "sun" | "galaxy" | "blackhole") {
     // orbit instead of backing straight out.
     destPos
       .copy(lookPos)
-      .add(new THREE.Vector3(-12, -4, -30).normalize().multiplyScalar(13));
+      .add(new THREE.Vector3(-12, -4, -30).normalize().multiplyScalar(28));
   }
   return { destPos, lookPos };
 }
