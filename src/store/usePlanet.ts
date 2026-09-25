@@ -6,12 +6,12 @@ interface PlanetState {
   selectedId: string | null;
   hoveredId: string | null;
   planetOpen: boolean;
-  warpTarget: "sun" | "galaxy" | null;
+  warpTarget: "sun" | "galaxy" | "blackhole" | null;
   warpPhase: "idle" | "out" | "in" | "back";
   select: (id: string | null) => void;
   hover: (id: string | null) => void;
   setPlanetOpen: (v: boolean) => void;
-  startWarp: (t: "sun" | "galaxy") => void;
+  startWarp: (t: "sun" | "galaxy" | "blackhole") => void;
   setWarpPhase: (p: PlanetState["warpPhase"]) => void;
   endWarp: () => void;
 }

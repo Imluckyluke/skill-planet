@@ -13,6 +13,11 @@ const INFO = {
     tagline: "15,000 stars, generated in code. No images.",
     chips: ["15k rendered stars", "3 arms", "100% procedural"],
   },
+  blackhole: {
+    title: "THE VOID",
+    tagline: "Stellar-mass black hole. Nothing escapes, not even light.",
+    chips: ["~10 M☉", "Event horizon: ~30km", "Accretion disk visible"],
+  },
 } as const;
 
 export function WarpCard() {

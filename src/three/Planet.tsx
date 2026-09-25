@@ -6,14 +6,20 @@ import * as THREE from "three";
 import { usePlanet } from "@/store/usePlanet";
 
 export function Planet() {
-  const rings = useRef<THREE.Group>(null);
+  const meshRef = useRef<THREE.Mesh>(null);
+  const ringsRef = useRef<THREE.Group>(null);
   const select = usePlanet((s) => s.select);
   const setPlanetOpen = usePlanet((s) => s.setPlanetOpen);
+  const { planetOpen } = usePlanet();
+  const scale = useRef(1);
 
   useFrame((_, delta) => {
-    if (rings.current) {
-      rings.current.rotation.y += delta * 0.06;
+    if (ringsRef.current) {
+      ringsRef.current.rotation.y += delta * 0.06;
     }
+    const target = planetOpen ? 1.08 : 1;
+    scale.current = THREE.MathUtils.lerp(scale.current, target, 0.15);
+    if (meshRef.current) meshRef.current.scale.setScalar(scale.current);
   });
 
   const onClick = (e: ThreeEvent<MouseEvent>) => {
@@ -26,6 +32,7 @@ export function Planet() {
     <group>
       {/* Core */}
       <mesh
+        ref={meshRef}
         onClick={onClick}
         onPointerOver={(e) => {
           e.stopPropagation();
@@ -40,7 +47,7 @@ export function Planet() {
       </mesh>
 
       {/* Rotating latitude bands */}
-      <group ref={rings}>
+      <group ref={ringsRef}>
         <mesh scale={1.015}>
           <sphereGeometry args={[1.6, 32, 32]} />
           <meshBasicMaterial

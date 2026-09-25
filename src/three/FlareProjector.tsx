@@ -7,17 +7,12 @@ import { ghostRegistry } from "./labelRegistry";
 
 const v = new THREE.Vector3();
 const pv = new THREE.Vector3();
-const PLANET_SCREEN_RADIUS = 2.1;
-
-const GHOSTS = [
-  { t: 0.45, base: 0.75 },
-  { t: 0.75, base: 0.6 },
-  { t: 1.25, base: 0.45 },
-];
+const PLANET_RADIUS = 1.6;
 
 /**
  * Classic lens ghosts: mirrored across screen center from the sun,
  * fading as the sun leaves the frame or hides behind the camera.
+ * Properly occluded by the planet sphere.
  */
 export function FlareProjector() {
   useFrame((state) => {
@@ -42,9 +37,25 @@ export function FlareProjector() {
     const planetSy = (-pv.y * 0.5 + 0.5) * size.height;
     const planetDist = camera.position.length();
     const planetPx =
-      ((PLANET_SCREEN_RADIUS / planetDist) /
+      ((PLANET_RADIUS / planetDist) /
         Math.tan(THREE.MathUtils.degToRad(persp.fov / 2))) *
       (size.height / 2);
+
+    // Also check if sun is behind the planet (ray from camera to sun intersects planet)
+    const camPos = camera.position;
+    const toSun = new THREE.Vector3()
+      .set(SUN_POSITION[0], SUN_POSITION[1], SUN_POSITION[2])
+      .sub(camPos);
+    const sunDist = toSun.length();
+    const sunDir = toSun.normalize();
+    // Distance from camera to planet center
+    const toPlanet = new THREE.Vector3(0, 0, 0).sub(camPos);
+    const planetDistCam = toPlanet.length();
+    const planetDir = toPlanet.normalize();
+    const cosAngle = sunDir.dot(planetDir);
+    const angle = Math.acos(Math.min(1, Math.max(-1, cosAngle)));
+    const planetAngularRadius = Math.asin(Math.min(1, PLANET_RADIUS / planetDistCam));
+    const sunBehindPlanet = planetDistCam < sunDist && angle < planetAngularRadius;
 
     GHOSTS.forEach((g, i) => {
       const el = ghostRegistry.get(i);
@@ -54,10 +65,17 @@ export function FlareProjector() {
       const overPlanet =
         planetInFront &&
         Math.hypot(gx - planetSx, gy - planetSy) < planetPx;
+      const blocked = overPlanet || sunBehindPlanet;
       el.style.transform = `translate(-50%,-50%) translate(${gx.toFixed(1)}px,${gy.toFixed(1)}px)`;
-      el.style.opacity = overPlanet ? "0" : (fade * g.base).toFixed(2);
+      el.style.opacity = blocked ? "0" : (fade * g.base).toFixed(2);
     });
   });
 
   return null;
 }
+
+const GHOSTS = [
+  { t: 0.45, base: 0.75 },
+  { t: 0.75, base: 0.6 },
+  { t: 1.25, base: 0.45 },
+];

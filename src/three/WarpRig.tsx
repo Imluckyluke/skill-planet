@@ -6,6 +6,7 @@ import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { SUN_POSITION } from "./PlanetScene";
 import { GALAXY_POSITION } from "./Galaxy";
+import { BLACK_HOLE_POSITION } from "./BlackHole";
 import { usePlanet } from "@/store/usePlanet";
 
 const OVERVIEW = new THREE.Vector3(0, 2.6, 9.5);
@@ -17,13 +18,16 @@ function easeInOutCubic(t: number) {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
-function destinationFor(target: "sun" | "galaxy") {
+function destinationFor(target: "sun" | "galaxy" | "blackhole") {
   if (target === "sun") {
     lookPos.set(SUN_POSITION[0], SUN_POSITION[1], SUN_POSITION[2]);
     destPos.copy(lookPos).add(new THREE.Vector3(13, -10, 40).normalize().multiplyScalar(13));
-  } else {
+  } else if (target === "galaxy") {
     lookPos.set(GALAXY_POSITION[0], GALAXY_POSITION[1], GALAXY_POSITION[2]);
     destPos.copy(lookPos).add(new THREE.Vector3(-46, 21, 72).normalize().multiplyScalar(38));
+  } else {
+    lookPos.set(BLACK_HOLE_POSITION[0], BLACK_HOLE_POSITION[1], BLACK_HOLE_POSITION[2]);
+    destPos.copy(lookPos).add(new THREE.Vector3(75, -28, 135).normalize().multiplyScalar(15));
   }
   return { destPos, lookPos };
 }

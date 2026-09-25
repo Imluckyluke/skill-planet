@@ -1,6 +1,5 @@
 "use client";
 
-import * as THREE from "three";
 import { getGlowTexture } from "./textures";
 
 export const BLACK_HOLE_POSITION: [number, number, number] = [-75, 28, -135];

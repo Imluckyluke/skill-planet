@@ -120,7 +120,7 @@ export function PlanetScene() {
           position={BLACK_HOLE_POSITION}
           onClick={(e) => {
             e.stopPropagation();
-            startWarp("galaxy");
+            startWarp("blackhole");
           }}
           onPointerOver={hoverOn}
           onPointerOut={hoverOff}
