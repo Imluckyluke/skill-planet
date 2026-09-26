@@ -161,7 +161,7 @@ function Photosphere({ onSunClick }: { onSunClick: (e: ThreeEvent<MouseEvent>) =
         document.body.style.cursor = "auto";
       }}
     >
-      <sphereGeometry args={[R, 96, 96]} />
+      <sphereGeometry args={[R, 64, 64]} />
       <primitive ref={matRef} object={mat} attach="material" />
     </mesh>
   );
@@ -203,8 +203,8 @@ function EruptionJets() {
     return arr;
   }, []);
 
-  const body = useMemo(() => makeJetLayer(420, sites), [sites]);
-  const core = useMemo(() => makeJetLayer(220, sites), [sites]);
+  const body = useMemo(() => makeJetLayer(300, sites), [sites]);
+  const core = useMemo(() => makeJetLayer(150, sites), [sites]);
 
   const bodyGeom = useMemo(() => layerGeometry(body), [body]);
   const coreGeom = useMemo(() => layerGeometry(core), [core]);

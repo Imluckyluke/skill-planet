@@ -25,7 +25,7 @@ function OrbGeometry({
     case "tetra":
       return <tetrahedronGeometry args={[size, 1]} />;
     case "knot":
-      return <torusKnotGeometry args={[size * 0.62, size * 0.2, 100, 12]} />;
+      return <torusKnotGeometry args={[size * 0.62, size * 0.2, 64, 10]} />;
     case "ico":
     default:
       return <icosahedronGeometry args={[size, detail]} />;

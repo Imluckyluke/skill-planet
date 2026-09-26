@@ -16,7 +16,8 @@ import { BLACK_HOLE_POSITION } from "./BlackHole";
  *  Kept mounted during "back" too, so the Back button flies you away from
  *  the surface instead of it vanishing with a jump cut. */
 export function WarpTargets() {
-  const { warpPhase, warpTarget } = usePlanet();
+  const warpPhase = usePlanet((s) => s.warpPhase);
+  const warpTarget = usePlanet((s) => s.warpTarget);
 
   if (!warpTarget) return null;
   const visible =

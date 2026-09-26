@@ -14,8 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Skill Planet",
-  description: "An interactive 3D planet of skills",
+  title: "Skill Planet — Hadi (@imluckyluke)",
+  description:
+    "Interactive 3D skill planet of Hadi — full-stack web, Telegram bots, Android. Contact: https://t.me/imluckyluke",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

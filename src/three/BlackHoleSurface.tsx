@@ -28,17 +28,17 @@ export function BlackHoleSurface() {
 
       {/* Event horizon shadow */}
       <mesh>
-        <sphereGeometry args={[3, 48, 48]} />
+        <sphereGeometry args={[3, 32, 32]} />
         <meshBasicMaterial color="#000000" />
       </mesh>
 
       {/* Accretion disk rim */}
       <mesh rotation={DISK_TILT}>
-        <torusGeometry args={[4.8, 0.22, 12, 128]} />
+        <torusGeometry args={[4.8, 0.22, 12, 96]} />
         <meshBasicMaterial color="#ffd9a0" transparent opacity={0.9} />
       </mesh>
       <mesh rotation={DISK_TILT}>
-        <torusGeometry args={[6.6, 0.6, 12, 128]} />
+        <torusGeometry args={[6.6, 0.6, 12, 96]} />
         <meshBasicMaterial
           color="#ff7a3c"
           transparent

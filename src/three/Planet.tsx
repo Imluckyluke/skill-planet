@@ -10,7 +10,7 @@ export function Planet() {
   const ringsRef = useRef<THREE.Group>(null);
   const select = usePlanet((s) => s.select);
   const setPlanetOpen = usePlanet((s) => s.setPlanetOpen);
-  const { planetOpen } = usePlanet();
+  const planetOpen = usePlanet((s) => s.planetOpen);
   const scale = useRef(1);
 
   useFrame((_, delta) => {
@@ -42,14 +42,14 @@ export function Planet() {
           document.body.style.cursor = "auto";
         }}
       >
-        <sphereGeometry args={[1.6, 64, 64]} />
+        <sphereGeometry args={[1.6, 48, 48]} />
         <meshStandardMaterial color="#1d4ed8" roughness={0.75} metalness={0.15} />
       </mesh>
 
       {/* Rotating latitude bands */}
       <group ref={ringsRef}>
         <mesh scale={1.015}>
-          <sphereGeometry args={[1.6, 32, 32]} />
+          <sphereGeometry args={[1.6, 24, 24]} />
           <meshBasicMaterial
             color="#60a5fa"
             wireframe
@@ -61,7 +61,7 @@ export function Planet() {
 
       {/* Atmosphere glow */}
       <mesh scale={1.18}>
-        <sphereGeometry args={[1.6, 48, 48]} />
+        <sphereGeometry args={[1.6, 32, 32]} />
         <meshBasicMaterial
           color="#38bdf8"
           transparent

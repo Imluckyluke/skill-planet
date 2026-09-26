@@ -10,6 +10,7 @@ const TARGETS = [
 
 export function HUD() {
   const startWarp = usePlanet((s) => s.startWarp);
+  const setPlanetOpen = usePlanet((s) => s.setPlanetOpen);
   const warpPhase = usePlanet((s) => s.warpPhase);
 
   return (
@@ -33,6 +34,20 @@ export function HUD() {
                 {t.label}
               </button>
             ))}
+            <button
+              onClick={() => setPlanetOpen(true)}
+              className="rounded-full border border-sky-300/30 bg-black/50 px-3 py-1 text-xs text-sky-100/90 backdrop-blur transition-colors hover:bg-sky-300/20 hover:text-white"
+            >
+              ✉ About
+            </button>
+            <a
+              href="https://t.me/imluckyluke"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-full border border-sky-300/30 bg-black/50 px-3 py-1 text-xs text-sky-100/90 backdrop-blur transition-colors hover:bg-sky-300/20 hover:text-white"
+            >
+              ✈ @imluckyluke
+            </a>
           </div>
         )}
       </div>

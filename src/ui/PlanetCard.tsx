@@ -58,13 +58,13 @@ export function PlanetCard() {
             </span>
           </a>
           <a
-            href="https://t.me/Im_Solaire"
+            href="https://t.me/imluckyluke"
             target="_blank"
             rel="noopener noreferrer"
             className="block rounded-xl border border-white/10 bg-white/5 px-3 py-2 transition-colors hover:bg-white/10"
           >
             <span className="text-sm font-semibold text-white">Telegram</span>
-            <span className="ml-2 text-xs text-white/50">t.me/Im_Solaire ↗</span>
+            <span className="ml-2 text-xs text-white/50">t.me/imluckyluke ↗</span>
             <span className="mt-0.5 block text-xs leading-5 text-white/60">
               Fastest way to reach me
             </span>

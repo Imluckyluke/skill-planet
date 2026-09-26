@@ -8,6 +8,10 @@ import { usePlanet } from "@/store/usePlanet";
 
 const v = new THREE.Vector3();
 const pv = new THREE.Vector3();
+const toSun = new THREE.Vector3();
+const toPlanet = new THREE.Vector3();
+const sunDir = new THREE.Vector3();
+const planetDir = new THREE.Vector3();
 const PLANET_RADIUS = 1.6;
 
 const MAIN_IDX = 3;
@@ -53,15 +57,16 @@ export function FlareProjector() {
       (size.height / 2);
 
     // Sun behind the planet (ray from camera to sun intersects planet)?
+    // NOTE: temp vectors are module-scope — no per-frame allocation (GC churn).
     const camPos = camera.position;
-    const toSun = new THREE.Vector3()
+    toSun
       .set(SUN_POSITION[0], SUN_POSITION[1], SUN_POSITION[2])
       .sub(camPos);
     const sunDist = toSun.length();
-    const sunDir = toSun.normalize();
-    const toPlanet = new THREE.Vector3(0, 0, 0).sub(camPos);
+    sunDir.copy(toSun).normalize();
+    toPlanet.set(0, 0, 0).sub(camPos);
     const planetDistCam = toPlanet.length();
-    const planetDir = toPlanet.normalize();
+    planetDir.copy(toPlanet).normalize();
     const cosAngle = sunDir.dot(planetDir);
     const angle = Math.acos(Math.min(1, Math.max(-1, cosAngle)));
     const planetAngularRadius = Math.asin(Math.min(1, PLANET_RADIUS / planetDistCam));

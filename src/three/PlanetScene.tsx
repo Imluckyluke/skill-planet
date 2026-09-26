@@ -46,9 +46,10 @@ export function PlanetScene() {
 
   return (
     <Canvas
-      dpr={[1, 1.75]}
+      dpr={[1, 1.5]}
       camera={{ position: [0, 2.6, 9.5], fov: 45 }}
       onPointerMissed={clearAll}
+      gl={{ antialias: true, powerPreference: "high-performance" }}
     >
       <color attach="background" args={["#05070f"]} />
       <ambientLight intensity={0.35} />
@@ -141,10 +142,10 @@ export function PlanetScene() {
         <FlareProjector />
         <WarpRig />
       </Suspense>
-      <EffectComposer multisampling={4}>
+      <EffectComposer multisampling={0}>
         <Bloom
           intensity={0.35}
-          luminanceThreshold={0.4}
+          luminanceThreshold={0.45}
           luminanceSmoothing={0.6}
           mipmapBlur
         />
